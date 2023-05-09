@@ -26,12 +26,20 @@ import qualified Server.Handler.CustomMethod   as CustomMethod
 import qualified Server.Handler.GoToDefn       as GoToDefn
 import qualified Server.Handler.Hover          as Hover
 
+mock_handlers :: Handlers ServerM
+mock_handlers = mconcat
+  [ notificationHandler J.SInitialized $ \_notif -> do
+      pure ()
+  , requestHandler J.STextDocumentHover $ \req responder -> do
+      pure ()
+  ]
+
 -- handlers of the LSP server
 handlers :: Handlers ServerM
 handlers = mconcat
   [ notificationHandler J.SInitialized $ \_not -> do
       pure ()
-  , 
+  ,
     -- autocompletion
     requestHandler J.STextDocumentCompletion $ \req responder -> do
     let completionContext = req ^. J.params . J.context
