@@ -23,6 +23,7 @@ import           Server.Monad
 data Mode = ModeLSP | ModeHelp | ModeDev | MockServer
 
 -- entry point of the LSP server
+-- TODO WHY IO Int? Callsite at Main.hs seems to have nothing to do with the Int
 run :: Bool -> IO Int
 run devMode = do
   env <- initGlobalEnv
@@ -37,45 +38,45 @@ run devMode = do
         putStrLn "== dev server closed =="
     else do
       runServer (serverDefn env)
- where
-  printLog :: GlobalEnv -> IO ()
-  printLog env = forever $ do
-    result <- readChan (globalChan env)
-    when devMode $ do
-      Text.putStrLn result
+  where
+    printLog :: GlobalEnv -> IO ()
+    printLog env = forever $ do
+      result <- readChan (globalChan env)
+      when devMode $ do
+        Text.putStrLn result
 
-  serverDefn :: GlobalEnv -> ServerDefinition ()
-  serverDefn env = ServerDefinition
-    { defaultConfig         = ()
-    , onConfigurationChange = const $ pure $ Right ()
-    , doInitialize          = \ctxEnv _req -> pure $ Right ctxEnv
-    , staticHandlers        = handlers
-    , interpretHandler      = \ctxEnv -> Iso (runServerM env ctxEnv) liftIO
-    , options               = lspOptions
-    }
+serverDefn :: GlobalEnv -> ServerDefinition ()
+serverDefn env = ServerDefinition
+  { defaultConfig         = ()
+  , onConfigurationChange = const $ pure $ Right ()
+  , doInitialize          = \ctxEnv _req -> pure $ Right ctxEnv
+  , staticHandlers        = handlers
+  , interpretHandler      = \ctxEnv -> Iso (runServerM env ctxEnv) liftIO
+  , options               = lspOptions
+  }
 
-  lspOptions :: Options
-  lspOptions = defaultOptions { textDocumentSync            = Just syncOptions
-                              , completionTriggerCharacters = Just ['\\']
-                              }
+lspOptions :: Options
+lspOptions = defaultOptions { textDocumentSync            = Just syncOptions
+                            , completionTriggerCharacters = Just ['\\']
+                            }
 
-  -- these `TextDocumentSyncOptions` are essential for receiving notifications from the client
-  syncOptions :: LSP.TextDocumentSyncOptions
-  syncOptions = LSP.TextDocumentSyncOptions
-    { LSP._openClose         = Just True -- receive open and close notifications from the client
-    , LSP._change            = Just LSP.TdSyncIncremental -- receive change notifications from the client
-    , LSP._willSave          = Just False -- receive willSave notifications from the client
-    , LSP._willSaveWaitUntil = Just False -- receive willSave notifications from the client
-    , LSP._save              = Just $ LSP.InR saveOptions
-    }
+-- these `TextDocumentSyncOptions` are essential for receiving notifications from the client
+syncOptions :: LSP.TextDocumentSyncOptions
+syncOptions = LSP.TextDocumentSyncOptions
+  { LSP._openClose         = Just True -- receive open and close notifications from the client
+  , LSP._change            = Just LSP.TdSyncIncremental -- receive change notifications from the client
+  , LSP._willSave          = Just False -- receive willSave notifications from the client
+  , LSP._willSaveWaitUntil = Just False -- receive willSave notifications from the client
+  , LSP._save              = Just $ LSP.InR saveOptions
+  }
 
-  -- includes the document content on save, so that we don't have to read it from the disk
-  saveOptions :: LSP.SaveOptions
-  saveOptions = LSP.SaveOptions (Just True)
+-- includes the document content on save, so that we don't have to read it from the disk
+saveOptions :: LSP.SaveOptions
+saveOptions = LSP.SaveOptions (Just True)
 
 
--- TODO run :: Mode -> IO Int
-run' :: Mode -> IO Int
+-- TODO run :: Mode -> IO ()
+run' :: Mode -> IO ()
 run' MockServer = do
   env <- initGlobalEnv
   -- runServer (serverDefn env) -- TODO refactor localized def above??

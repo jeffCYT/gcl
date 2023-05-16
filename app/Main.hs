@@ -7,7 +7,7 @@ import Pretty ()
 import System.Console.GetOpt
 import System.Environment
 import Prelude
-import Server (run, Mode)
+import Server (run, Mode(..), run')
 
 main :: IO ()
 main = do
@@ -21,8 +21,8 @@ main = do
       _ <- run True
       return ()
     MockServer -> do
-      _ <- run True
-      return ()
+      run' MockServer
+
 
 --------------------------------------------------------------------------------
 
