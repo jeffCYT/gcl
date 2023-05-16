@@ -7,7 +7,7 @@ import Pretty ()
 import System.Console.GetOpt
 import System.Environment
 import Prelude
-import Server (run)
+import Server (run, Mode)
 
 main :: IO ()
 main = do
@@ -17,14 +17,14 @@ main = do
     ModeLSP -> do
       _ <- run False
       return ()
-    ModeDev -> do 
-      _ <- run True 
+    ModeDev -> do
+      _ <- run True
+      return ()
+    MockServer -> do
+      _ <- run True
       return ()
 
 --------------------------------------------------------------------------------
-
--- | Command-line arguments
-data Mode = ModeLSP | ModeHelp | ModeDev
 
 newtype Options = Options
   { optMode :: Mode
@@ -44,7 +44,12 @@ options =
       ['d']
       ["dev"]
       (NoArg (\opts -> opts {optMode = ModeDev}))
-      "for testing"
+      "for testing",
+    Option
+      ['m']
+      ["mock"]
+      (NoArg (\opts -> opts {optMode = MockServer}))
+      "using mock LSP for testing connections"
   ]
 
 usage :: String

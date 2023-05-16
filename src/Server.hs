@@ -19,6 +19,9 @@ import           Server.Monad
 
 --------------------------------------------------------------------------------
 
+-- | Command-line arguments
+data Mode = ModeLSP | ModeHelp | ModeDev | MockServer
+
 -- entry point of the LSP server
 run :: Bool -> IO Int
 run devMode = do
@@ -69,3 +72,13 @@ run devMode = do
   -- includes the document content on save, so that we don't have to read it from the disk
   saveOptions :: LSP.SaveOptions
   saveOptions = LSP.SaveOptions (Just True)
+
+
+-- TODO run :: Mode -> IO Int
+run' :: Mode -> IO Int
+run' MockServer = do
+  env <- initGlobalEnv
+  -- runServer (serverDefn env) -- TODO refactor localized def above??
+  putStrLn ("MockServer mode closed")
+run' _ = do
+  putStrLn ("Error")
